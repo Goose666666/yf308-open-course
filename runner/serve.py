@@ -37,6 +37,7 @@ MAX_OUTPUT = 60_000
 
 _lock = threading.Lock()
 CHECKS = {}
+MODULES_DIR = None      # 大模型课的练习要 import 这里的从零实现模块
 
 # 跑完之后把 matplotlib 画的图取出来，随输出一起回给网页
 CAPTURE = r'''
@@ -73,6 +74,18 @@ def load_checks(path):
     return None
 
 
+def load_modules(path):
+    global MODULES_DIR
+    for cand in ([path] if path else []) + [
+        os.path.join(HERE, "pysrc"),
+        os.path.join(HERE, "..", "llm", "pysrc"),
+    ]:
+        if cand and os.path.isdir(cand):
+            MODULES_DIR = os.path.abspath(cand)
+            return MODULES_DIR
+    return None
+
+
 def clip(text):
     if len(text) <= MAX_OUTPUT:
         return text
@@ -87,6 +100,8 @@ def run_code(code, stdin_text=""):
     with open(fn, "w", encoding="utf-8") as f:
         f.write(code + "\n\n" + CAPTURE)
     env = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUNBUFFERED="1", MPLBACKEND="Agg")
+    if MODULES_DIR:
+        env["PYTHONPATH"] = MODULES_DIR + os.pathsep + env.get("PYTHONPATH", "")
     try:
         p = subprocess.run([sys.executable, fn], cwd=work, env=env,
                            input=(stdin_text or "").encode("utf-8"),
@@ -176,6 +191,7 @@ class Handler(BaseHTTPRequestHandler):
                 "host": socket.gethostname(),
                 "platform": platform.platform(terse=True),
                 "checks": len(CHECKS),
+                "modules": bool(MODULES_DIR),
             })
         self._json({"error": "not found"}, 404)
 
@@ -210,11 +226,14 @@ def main():
     ap.add_argument("--port", type=int, default=8760)
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--checks", default=None)
+    ap.add_argument("--modules", default=None)
     args = ap.parse_args()
 
     found = load_checks(args.checks)
+    mods = load_modules(args.modules)
     print("Python %s  %s" % (platform.python_version(), sys.executable))
     print("判定规则 %d 道%s" % (len(CHECKS), ("  %s" % found) if found else "  没找到 checks.json，只能运行不能提交检查"))
+    print("从零实现模块 %s" % (mods if mods else "没找到 pysrc，大模型课的练习会 import 失败"))
     if args.host != "127.0.0.1":
         print("注意：正在对外监听 %s，这个端口能执行任意代码，只在信任的网络里这么用。" % args.host)
     print("\n网页运行设置里填：http://127.0.0.1:%d\n" % args.port)

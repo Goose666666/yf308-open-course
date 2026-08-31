@@ -108,13 +108,21 @@ def main():
     host, _ = run(client, "hostname")
     print("服务器 %s  Python %s  %s" % (host, ver, py))
 
-    run(client, "mkdir -p %s" % args.remote_dir)
+    run(client, "mkdir -p %s/pysrc" % args.remote_dir)
     sftp = client.open_sftp()
     for name, local in (("serve.py", os.path.join(HERE, "serve.py")),
                         ("checks.json", os.path.join(HERE, "..", "python", "data", "checks.json"))):
         if os.path.isfile(local):
             sftp.put(local, "%s/%s" % (args.remote_dir, name))
+    pysrc = os.path.join(HERE, "..", "llm", "pysrc")
+    n_mod = 0
+    if os.path.isdir(pysrc):
+        for fn in sorted(os.listdir(pysrc)):
+            if fn.endswith(".py"):
+                sftp.put(os.path.join(pysrc, fn), "%s/pysrc/%s" % (args.remote_dir, fn))
+                n_mod += 1
     sftp.close()
+    print("传了 serve.py、判定规则和 %d 个模块" % n_mod)
 
     run(client, "pkill -f 'serve.py --port %d' || true" % args.port)
     time.sleep(0.5)

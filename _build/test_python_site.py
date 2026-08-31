@@ -4,7 +4,9 @@ import json
 import sys
 from playwright.sync_api import sync_playwright
 
-URL = "http://127.0.0.1:8799/python/index.html"
+import os
+BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8799").rstrip("/")
+URL = BASE + "/python/index.html"
 PROXY = {"server": "http://127.0.0.1:7890", "bypass": "127.0.0.1,localhost"}
 
 BOOT = """

@@ -8,7 +8,7 @@
 
 **Python 入门 · 动手实践** — 十二章，24 道练习。从装环境到做完一个数据分析项目，每章先跑通一个小程序，再讲清背后的原理。左边是讲义，可以下载 PDF，右边是练习，给了起始代码、提示、参考答案和预期结果。
 
-**深度学习与大模型 · 复习** — 二十二小节，66 道练习，整理中。从零手写自动求导、Transformer、GPT、LoRA、RAG、CLIP、扩散模型，全部只用 numpy。
+**深度学习与大模型 · 复习** — 二十二小节，66 道练习。从零手写自动求导、Transformer、GPT、LoRA、RAG、CLIP、扩散模型，全部只用 numpy，不装 PyTorch 也能跑。每节先给任务和原理，再动手改代码，答案按数值比对自动批改。
 
 ## 代码在哪里跑
 
@@ -22,7 +22,7 @@
 python runner/serve.py
 ```
 
-然后在运行设置里选「连自己的 Python」，地址填 `http://127.0.0.1:8760`。只依赖标准库，不用 pip 装东西。
+然后在运行设置里选「连自己的 Python」，地址填 `http://127.0.0.1:8760`。只依赖标准库，不用 pip 装东西。大模型课的练习要 import 从零实现的模块，它会自动把 `llm/pysrc` 加进 PYTHONPATH，所以要在仓库目录里跑。
 
 **远程服务器**。适合练习要用 GPU 或者大内存的场景。
 
@@ -49,6 +49,7 @@ _build/             从原始课程工程生成静态站点的脚本与测试
 ```bash
 python _build/build_data.py          # 导出课程内容与判题规则
 python _build/build_python_site.py   # 生成 Python 课的静态页
+python _build/build_llm_site.py      # 生成大模型课的静态页
 ```
 
 ## 测试
@@ -59,6 +60,13 @@ python _build/build_python_site.py   # 生成 Python 课的静态页
 python -m http.server 8799
 python _build/test_python_site.py    # 24 道参考答案在浏览器里跑一遍，判定要全过
 python _build/test_python_ui.py      # 界面走一遍：运行、判题、输入、画图、切后端
+python _build/test_llm_site.py       # 大模型课 66 道参考答案，批改要全判正确
+```
+
+三个脚本都能带一个网址参数，对着线上站点跑：
+
+```bash
+python _build/test_python_ui.py https://goose666666.github.io/yf308-open-course
 ```
 
 ## 许可
